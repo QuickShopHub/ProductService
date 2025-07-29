@@ -51,6 +51,13 @@ public class ProductService {
 
 
     public Product addProduct(Product product) {
+
+        Optional<Product> temp = productRepository.findByArticle(product.getArticle());
+
+        if(temp.isPresent()) {
+            throw new IllegalArgumentException("Product already exists. Id: " + product.getId());
+        }
+
         product.setId(UUID.randomUUID());
         product.setCreatedAt(LocalDate.now());
         return productRepository.save(product);

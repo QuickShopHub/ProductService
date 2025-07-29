@@ -50,4 +50,8 @@ public class Product {
 
     @Column(name = "createdat")
     private LocalDate createdAt;
+
+    //todo @NotNull(message = "Id продовца должно быть указано")
+    @Column(name = "idvendor")
+    private UUID idVendor;
 }

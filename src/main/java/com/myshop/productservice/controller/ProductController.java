@@ -2,13 +2,12 @@ package com.myshop.productservice.controller;
 
 
 import com.myshop.productservice.repository.Product;
-import com.myshop.productservice.repository.ProductRepository;
 import com.myshop.productservice.service.ProductService;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
 
+import jakarta.validation.Valid;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 import java.util.UUID;
 
 @RestController
@@ -21,9 +20,24 @@ public class ProductController {
         this.productService = productService;
     }
 
-    @GetMapping(path = "/getId")
-    public Product getOfId(@RequestParam(name = "id") UUID id) {
+    @GetMapping(path = "/getProduct")
+    public Product getProductById(@RequestParam(name = "id") UUID id) {
         return productService.getProductById(id);
+    }
+
+    @GetMapping(path = "/getProducts")
+    public List<Product> getProductsById(@RequestParam(name = "id") List<UUID> id) {
+        return productService.getProductsById(id);
+    }
+
+    @PostMapping(path = "/addProduct")
+    public Product addProduct(@Valid @RequestBody Product product) {
+        return productService.addProduct(product);
+    }
+
+    @GetMapping(path = "/getAll")
+    public List<Product> getAllProducts() {
+        return productService.getAllProducts();
     }
 
 }

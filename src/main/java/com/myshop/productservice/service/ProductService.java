@@ -5,13 +5,16 @@ import com.myshop.productservice.repository.Product;
 import com.myshop.productservice.repository.ProductRepository;
 import com.myshop.productservice.dto.ProductUpdatePrice;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.time.Duration;
 import java.time.LocalDate;
 import java.util.*;
 
@@ -20,11 +23,15 @@ import java.util.*;
 @Service
 public class ProductService {
 
+    private static final String REDIS_KEY_PREFIX = "product:";
+
+    private final RedisTemplate<String, Product> redisTemplate;
 
     private final ProductRepository productRepository;
 
-
-    public ProductService(ProductRepository productRepository) {
+    @Autowired
+    public ProductService(RedisTemplate<String, Product> redisTemplate, ProductRepository productRepository) {
+        this.redisTemplate = redisTemplate;
         this.productRepository = productRepository;
     }
 
@@ -34,12 +41,32 @@ public class ProductService {
             throw new IllegalArgumentException("Ids is null");
         }
 
-        List<Product> list = productRepository.findAllById(ids);
+        List<Product> result = new ArrayList<>();
+        List<UUID> idsToFetchFromDb = new ArrayList<>();
 
+        // Шаг 1: Получаем из Redis
+        for (UUID id : ids) {
+            Product product = redisTemplate.opsForValue().get(REDIS_KEY_PREFIX + id);
+            if (product != null) {
+                result.add(product);
+            } else {
+                idsToFetchFromDb.add(id);
+            }
+        }
+
+
+        List<Product> productsFromDb = productRepository.findAllById(idsToFetchFromDb);
+
+        for (Product product : productsFromDb) {
+            redisTemplate.opsForValue().set(REDIS_KEY_PREFIX + product.getId(), product, Duration.ofMinutes(5));
+            result.add(product);
+        }
+
+
+        //сортировка по id как пришли на сервер
         List<Product> onSend = new ArrayList<>();
-
-        for(Product product : list) {
-            for (Product value : list) {
+        for(Product product : result) {
+            for (Product value : result) {
                 if (product.getId().equals(value.getId())) {
                     onSend.add(value);
                 }
@@ -72,6 +99,9 @@ public class ProductService {
         if(temp.isEmpty()) {
             throw new IllegalArgumentException("Product with id: " + product.getId() + "is not found");
         }
+
+        redisTemplate.delete(REDIS_KEY_PREFIX+product.getId());
+
         return productRepository.save(product);
     }
 
@@ -83,6 +113,9 @@ public class ProductService {
         }
         Product update = temp.get();
         update.setPrice(productUpdatePrice.getPrice());
+
+        redisTemplate.delete(REDIS_KEY_PREFIX+productUpdatePrice.getId());
+
         return productRepository.save(update);
     }
 
@@ -94,8 +127,10 @@ public class ProductService {
             if(temp.isPresent()) {
                 count++;
             }
+            redisTemplate.delete(REDIS_KEY_PREFIX+id);
         }
         productRepository.deleteAllById(ids);
+
         return count;
     }
 
@@ -128,6 +163,8 @@ public class ProductService {
 
         update.setRating(rating);
         update.setCountGrades(countGrades);
+        
+        redisTemplate.delete(REDIS_KEY_PREFIX+updateRating.getIdProduct());
 
         return productRepository.save(update);
     }

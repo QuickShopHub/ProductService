@@ -9,7 +9,7 @@ import jakarta.validation.constraints.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-
+import org.springframework.data.redis.core.RedisHash;
 
 
 import java.math.BigDecimal;
@@ -17,6 +17,7 @@ import java.time.LocalDate;
 
 import java.util.UUID;
 
+@RedisHash
 @Entity
 @Table(name = "products")
 @Data

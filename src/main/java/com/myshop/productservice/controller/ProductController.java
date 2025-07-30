@@ -1,12 +1,15 @@
 package com.myshop.productservice.controller;
 
 
+import com.myshop.productservice.dto.UpdateRating;
 import com.myshop.productservice.repository.Product;
 import com.myshop.productservice.dto.ProductUpdatePrice;
 import com.myshop.productservice.service.ProductService;
 
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -35,8 +38,10 @@ public class ProductController {
     }
 
     @GetMapping(path = "/allProducts")
-    public List<Product> getAllProducts() {
-        return productService.getAllProducts();
+    public Page<Product> getAllProducts(
+            @RequestParam(defaultValue = "0", name = "page", required = false) int page,
+            @RequestParam(defaultValue = "1", name = "size", required = false) int size) {
+        return productService.getAllProducts(PageRequest.of(page, size));
     }
 
     @PutMapping()
@@ -58,5 +63,10 @@ public class ProductController {
         }
 
         return ResponseEntity.ok("Удалено: " + productService.deleteProducts(ids) + " записей");
+    }
+
+    @PatchMapping(path = "/rating")
+    public Product updateRating(@Valid @RequestBody UpdateRating updateRating) {
+        return productService.updateRatingValue(updateRating);
     }
 }

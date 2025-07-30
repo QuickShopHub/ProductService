@@ -54,4 +54,9 @@ public class Product {
     //todo @NotNull(message = "Id продовца должно быть указано")
     @Column(name = "idvendor")
     private UUID idVendor;
+
+    private BigDecimal rating;
+
+    @Column(name = "countgrades")
+    private long countGrades;
 }

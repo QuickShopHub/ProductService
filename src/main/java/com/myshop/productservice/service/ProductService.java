@@ -1,12 +1,17 @@
 package com.myshop.productservice.service;
 
+import com.myshop.productservice.dto.UpdateRating;
 import com.myshop.productservice.repository.Product;
 import com.myshop.productservice.repository.ProductRepository;
 import com.myshop.productservice.dto.ProductUpdatePrice;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.util.*;
 
@@ -57,8 +62,8 @@ public class ProductService {
         return productRepository.save(product);
     }
 
-    public List<Product> getAllProducts() {
-        return productRepository.findAll();
+    public Page<Product> getAllProducts(Pageable pageable) {
+        return productRepository.findAll(pageable);
     }
 
     public Product updateAll(Product product) {
@@ -93,4 +98,38 @@ public class ProductService {
         productRepository.deleteAllById(ids);
         return count;
     }
+
+
+    public Product updateRatingValue(UpdateRating updateRating) {
+        UUID id = updateRating.getIdProduct();
+        Optional<Product> temp = productRepository.findById(id);
+        if(temp.isEmpty()) {
+            throw new IllegalArgumentException("Product with id: " + updateRating.getIdProduct() + "is not found");
+        }
+
+        Product update = temp.get();
+
+        BigDecimal rating = update.getRating();
+        long countGrades =  update.getCountGrades();
+
+        BigDecimal longAsBigDecimal = BigDecimal.valueOf(countGrades);
+
+        if (rating.compareTo(BigDecimal.ZERO) != 0) {
+            rating = rating.multiply(longAsBigDecimal);
+            rating = rating.add(updateRating.getGrade());
+        }
+        else{
+            rating = updateRating.getGrade();
+        }
+
+        countGrades+=1;
+
+        rating = rating.divide(BigDecimal.valueOf(countGrades), 1, RoundingMode.HALF_UP);
+
+        update.setRating(rating);
+        update.setCountGrades(countGrades);
+
+        return productRepository.save(update);
+    }
+
 }

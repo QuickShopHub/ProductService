@@ -24,16 +24,22 @@ public class ProductService {
     }
 
     public Product getProductById(UUID id) {
+        if(id == null){
+            throw new IllegalArgumentException("Id is null");
+        }
         Optional<Product> temp = productRepository.findById(id);
         if(temp.isPresent()) {
             return temp.get();
         }
-        else{
-            throw new IllegalArgumentException("Product not found. Id: " + id);
-        }
+        throw new IllegalArgumentException("Product not found. Id: " + id);
+
     }
 
     public List<Product> getProductsById(List<UUID> ids) {
+
+        if(ids == null || ids.isEmpty()){
+            throw new IllegalArgumentException("Ids is null");
+        }
 
         List<Product> list = productRepository.findAllById(ids);
 
@@ -87,7 +93,7 @@ public class ProductService {
         return productRepository.save(update);
     }
 
-    public long delete(List<UUID> ids) {
+    public long deleteProducts(List<UUID> ids) {
         long count = 0;
 
         for (UUID id : ids) {
@@ -98,7 +104,17 @@ public class ProductService {
         }
         productRepository.deleteAllById(ids);
         return count;
+    }
 
+    public short deleteProduct(UUID id) {
+        Optional<Product> temp = productRepository.findById(id);
+        if(temp.isPresent()) {
+            productRepository.deleteById(id);
+        }
+        else{
+            throw new IllegalArgumentException("Product with id: " + id + "is not found");
+        }
+        return 1;
     }
 
 }

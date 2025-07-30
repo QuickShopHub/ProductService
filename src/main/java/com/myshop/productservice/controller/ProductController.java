@@ -24,6 +24,7 @@ public class ProductController {
 
     @GetMapping(path = "/getProduct")
     public Product getProductById(@Valid @RequestParam(name = "id") UUID id) {
+
         return productService.getProductById(id);
     }
 
@@ -53,11 +54,26 @@ public class ProductController {
         return productService.updatePrice(product);
     }
 
-    @DeleteMapping(path = "/deleteProductS")
-    public ResponseEntity<String>  deleteProductS(@RequestBody List<UUID> ids) {
+    @DeleteMapping(path = "/deleteProducts")
+    public ResponseEntity<String>  deleteProducts(@Valid @RequestParam(name = "ids") List<UUID> ids) {
 
-        return ResponseEntity.ok("Удалено: " + productService.delete(ids) + " записей");
+        if (ids == null || ids.isEmpty()) {
+            return ResponseEntity.badRequest().body("Список ID пуст");
+        }
+
+        return ResponseEntity.ok("Удалено: " + productService.deleteProducts(ids) + " записей");
     }
 
+    @DeleteMapping(path = "/deleteProduct")
+    public ResponseEntity<String>  deleteProduct(@Valid @RequestParam(name = "id") UUID id) {
+
+        if (id == null) {
+            return ResponseEntity.badRequest().body("Поле ID пусто");
+        }
+        if(productService.deleteProduct(id) == 1){
+            return ResponseEntity.ok("Запись: " + id + " удалена");
+        }
+        return ResponseEntity.badRequest().body("Ошибка при удалении");
+    }
 
 }

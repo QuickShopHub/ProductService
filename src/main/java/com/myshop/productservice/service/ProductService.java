@@ -48,6 +48,7 @@ public class ProductService {
         for (UUID id : ids) {
             Product product = redisTemplate.opsForValue().get(REDIS_KEY_PREFIX + id);
             if (product != null) {
+                log.info("НАШЛИ В РЭДИС");
                 result.add(product);
             } else {
                 idsToFetchFromDb.add(id);
@@ -58,7 +59,7 @@ public class ProductService {
         List<Product> productsFromDb = productRepository.findAllById(idsToFetchFromDb);
 
         for (Product product : productsFromDb) {
-            redisTemplate.opsForValue().set(REDIS_KEY_PREFIX + product.getId(), product, Duration.ofMinutes(5));
+            redisTemplate.opsForValue().set(REDIS_KEY_PREFIX + product.getId(), product, Duration.ofMinutes(1));
             result.add(product);
         }
 
@@ -163,7 +164,7 @@ public class ProductService {
 
         update.setRating(rating);
         update.setCountGrades(countGrades);
-        
+
         redisTemplate.delete(REDIS_KEY_PREFIX+updateRating.getIdProduct());
 
         return productRepository.save(update);

@@ -60,4 +60,7 @@ public class Product {
 
     @Column(name = "countgrades")
     private long countGrades;
+
+    @Column(name = "quantitysold")
+    private long quantitySold;
 }

@@ -1,6 +1,7 @@
 package com.myshop.productservice.repository;
 
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
@@ -8,6 +9,8 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.springframework.data.redis.core.RedisHash;
 
+import java.io.Serial;
+import java.io.Serializable;
 import java.util.UUID;
 
 @RedisHash
@@ -16,7 +19,7 @@ import java.util.UUID;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class Avatar {
+public class Avatar{
 
     @Id
     @GeneratedValue
@@ -27,5 +30,6 @@ public class Avatar {
 
     @OneToOne
     @JoinColumn(name = "productid")
+    @JsonBackReference
     private Product product;
 }

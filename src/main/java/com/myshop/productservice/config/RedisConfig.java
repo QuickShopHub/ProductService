@@ -26,7 +26,7 @@ public class RedisConfig {
         template.setKeySerializer(new StringRedisSerializer());
 
         ObjectMapper objectMapper = new ObjectMapper();
-        objectMapper.registerModule(new JavaTimeModule());  // ✅ Поддержка LocalDate, LocalDateTime и т.д.
+        objectMapper.registerModule(new JavaTimeModule());  //Поддержка LocalDate, LocalDateTime и т.д.
         objectMapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS); // Даты в читаемом виде
 
         // Значения — JSON

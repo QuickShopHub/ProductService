@@ -105,6 +105,8 @@ public class ProductService {
         return productRepository.findAll(pageable);
     }
 
+
+
     public Product updateAll(Product product) {
         Optional<Product> temp = productRepository.findById(product.getId());
 
@@ -113,14 +115,59 @@ public class ProductService {
         }
 
         Optional<Product> checkArticle = productRepository.findByArticle(product.getArticle());
-        if(checkArticle.isPresent()) {
+        if(checkArticle.isPresent() && !checkArticle.get().getId().equals(product.getId())) {
             throw new IllegalArgumentException("Product with the same article already exists. Id: " + checkArticle.get().getId());
         }
 
         redisTemplate.delete(REDIS_KEY_PREFIX+product.getId());
 
-        return productRepository.save(product);
+        Product newProduct = temp.get();
+
+        //Меняем поля
+        if(product.getAvatar() != null) {
+            newProduct.getAvatar().setUrl(product.getAvatar().getUrl());
+        }
+        if(product.getName() != null) {
+            newProduct.setName(product.getName());
+        }
+        if(product.getPrice() != null) {
+            newProduct.setPrice(product.getPrice());
+        }
+        if(product.getDescription() != null) {
+            newProduct.setDescription(product.getDescription());
+        }
+        if(product.getArticle() != null) {
+            newProduct.setArticle(product.getArticle());
+        }
+        if(product.getQuantity() != null){
+            newProduct.setQuantity(product.getQuantity());
+        }
+        if(product.getRating() != null) {
+            newProduct.setRating(product.getRating());
+        }
+        if(product.getActive() != null){
+            newProduct.setActive(product.getActive());
+        }
+        if(product.getCreatedAt() != null) {
+            newProduct.setCreatedAt(product.getCreatedAt());
+        }
+        if(product.getIdVendor() != null) {
+            newProduct.setIdVendor(product.getIdVendor());
+        }
+        if(product.getCountGrades() != null) {
+            newProduct.setCountGrades(product.getCountGrades());
+        }
+        if(product.getQuantitySold() != null){
+            newProduct.setQuantitySold(product.getQuantitySold());
+        }
+
+
+
+        return productRepository.save(newProduct);
     }
+
+
+
 
     public Product updatePrice(ProductUpdatePrice productUpdatePrice) {
         UUID id = productUpdatePrice.getId();

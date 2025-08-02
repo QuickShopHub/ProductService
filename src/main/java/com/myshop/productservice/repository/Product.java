@@ -1,6 +1,8 @@
 package com.myshop.productservice.repository;
 
 
+
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
 import lombok.AllArgsConstructor;
@@ -9,6 +11,8 @@ import lombok.NoArgsConstructor;
 import org.springframework.data.redis.core.RedisHash;
 
 
+import java.io.Serial;
+import java.io.Serializable;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 
@@ -20,7 +24,7 @@ import java.util.UUID;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class Product {
+public class Product{
 
     @Id
     private UUID id;
@@ -41,10 +45,10 @@ public class Product {
 
     @DecimalMin(value = "0.0", inclusive = true, message = "Количество не может быть отрицательным")
     @NotNull(message = "Количество должно быть указано")
-    private int quantity;
+    private Integer quantity;
 
     @NotNull(message = "Статус должен быть указан")
-    private boolean active;
+    private Boolean active;
 
     @Column(name = "createdat")
     private LocalDate createdAt;
@@ -56,11 +60,12 @@ public class Product {
     private BigDecimal rating;
 
     @Column(name = "countgrades")
-    private long countGrades;
+    private Long countGrades;
 
     @Column(name = "quantitysold")
-    private long quantitySold;
+    private Long quantitySold;
 
     @OneToOne(cascade = CascadeType.ALL, mappedBy = "product", orphanRemoval = true)
+    @JsonManagedReference
     private Avatar avatar;
 }

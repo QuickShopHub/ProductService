@@ -1,9 +1,12 @@
 package com.myshop.productservice.service;
 
+import com.myshop.productservice.dto.UpdateAvatar;
 import com.myshop.productservice.dto.UpdateRating;
+import com.myshop.productservice.repository.AvatarRepository;
 import com.myshop.productservice.repository.Product;
 import com.myshop.productservice.repository.ProductRepository;
 import com.myshop.productservice.dto.ProductUpdatePrice;
+import jakarta.transaction.Transactional;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -12,6 +15,7 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
 
+import java.beans.Transient;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.Duration;
@@ -28,11 +32,13 @@ public class ProductService {
     private final RedisTemplate<String, Product> redisTemplate;
 
     private final ProductRepository productRepository;
+    private final AvatarRepository avatarRepository;
 
     @Autowired
-    public ProductService(RedisTemplate<String, Product> redisTemplate, ProductRepository productRepository) {
+    public ProductService(RedisTemplate<String, Product> redisTemplate, ProductRepository productRepository, AvatarRepository avatarRepository) {
         this.redisTemplate = redisTemplate;
         this.productRepository = productRepository;
+        this.avatarRepository = avatarRepository;
     }
 
     public List<Product> getProductsById(List<UUID> ids) {
@@ -87,6 +93,11 @@ public class ProductService {
 
         product.setId(UUID.randomUUID());
         product.setCreatedAt(LocalDate.now());
+
+        if (product.getAvatar() != null) {
+            product.getAvatar().setProduct(product);
+        }
+
         return productRepository.save(product);
     }
 
@@ -174,5 +185,16 @@ public class ProductService {
 
         return productRepository.save(update);
     }
+
+    //-------------------АВАТАРКИ и ФОТКИ----------------------------------------
+    @Transactional
+    public UpdateAvatar updateAvatar(UpdateAvatar updateAvatar) {
+        if(avatarRepository.setUrlByProductId(updateAvatar.getAvatarUrl(), updateAvatar.getId()) == 1){
+            return updateAvatar;
+        }
+        throw new IllegalArgumentException("Product with id: " + updateAvatar.getId() + " not found");
+    }
+
+
 
 }

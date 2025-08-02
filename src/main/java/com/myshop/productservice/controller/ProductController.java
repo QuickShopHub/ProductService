@@ -1,6 +1,7 @@
 package com.myshop.productservice.controller;
 
 
+import com.myshop.productservice.dto.UpdateAvatar;
 import com.myshop.productservice.dto.UpdateRating;
 import com.myshop.productservice.repository.Product;
 import com.myshop.productservice.dto.ProductUpdatePrice;
@@ -69,4 +70,12 @@ public class ProductController {
     public Product updateRating(@Valid @RequestBody UpdateRating updateRating) {
         return productService.updateRatingValue(updateRating);
     }
+
+    //-------------------АВАТАРКИ и ФОТКИ----------------------------------------
+
+    @PutMapping(path = "/avatar")
+    public UpdateAvatar updateAvatar(@Valid @RequestBody UpdateAvatar updateAvatar) {
+        return productService.updateAvatar(updateAvatar);
+    }
+
 }

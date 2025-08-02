@@ -1,10 +1,7 @@
 package com.myshop.productservice.repository;
 
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -63,4 +60,7 @@ public class Product {
 
     @Column(name = "quantitysold")
     private long quantitySold;
+
+    @OneToOne(cascade = CascadeType.ALL, mappedBy = "product", orphanRemoval = true)
+    private Avatar avatar;
 }

@@ -95,10 +95,15 @@ public class ProductService {
     }
 
     public Product updateAll(Product product) {
-        UUID id = product.getId();
-        Optional<Product> temp = productRepository.findById(id);
+        Optional<Product> temp = productRepository.findById(product.getId());
+
         if(temp.isEmpty()) {
             throw new IllegalArgumentException("Product with id: " + product.getId() + "is not found");
+        }
+
+        Optional<Product> checkArticle = productRepository.findByArticle(product.getArticle());
+        if(checkArticle.isPresent()) {
+            throw new IllegalArgumentException("Product with the same article already exists. Id: " + checkArticle.get().getId());
         }
 
         redisTemplate.delete(REDIS_KEY_PREFIX+product.getId());

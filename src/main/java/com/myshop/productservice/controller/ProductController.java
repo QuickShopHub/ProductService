@@ -57,7 +57,7 @@ public class ProductController {
     }
 
     @DeleteMapping()
-    public ResponseEntity<String>  deleteProducts(@Valid @RequestParam(name = "ids") List<UUID> ids) {
+    public ResponseEntity<String>  deleteProducts(@Valid @RequestParam(name = "id") List<UUID> ids) {
 
         if (ids == null || ids.isEmpty()) {
             return ResponseEntity.badRequest().body("Список ID пуст");

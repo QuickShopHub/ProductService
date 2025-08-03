@@ -6,6 +6,7 @@ import com.myshop.productservice.repository.AvatarRepository;
 import com.myshop.productservice.repository.Product;
 import com.myshop.productservice.repository.ProductRepository;
 import com.myshop.productservice.dto.ProductUpdatePrice;
+import com.myshop.productservice.dto.searchService.ProductForSearch;
 import jakarta.transaction.Transactional;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,7 +16,6 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
 
-import java.beans.Transient;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.Duration;
@@ -29,13 +29,16 @@ public class ProductService {
 
     private static final String REDIS_KEY_PREFIX = "product:";
 
+    private final kafkaProducer  kafkaProducer;
+
     private final RedisTemplate<String, Product> redisTemplate;
 
     private final ProductRepository productRepository;
     private final AvatarRepository avatarRepository;
 
     @Autowired
-    public ProductService(RedisTemplate<String, Product> redisTemplate, ProductRepository productRepository, AvatarRepository avatarRepository) {
+    public ProductService(kafkaProducer kafkaProducer, RedisTemplate<String, Product> redisTemplate, ProductRepository productRepository, AvatarRepository avatarRepository) {
+        this.kafkaProducer = kafkaProducer;
         this.redisTemplate = redisTemplate;
         this.productRepository = productRepository;
         this.avatarRepository = avatarRepository;
@@ -85,6 +88,7 @@ public class ProductService {
 
     public Product addProduct(Product product) {
 
+
         Optional<Product> temp = productRepository.findByArticle(product.getArticle());
 
         if(temp.isPresent()) {
@@ -97,6 +101,18 @@ public class ProductService {
         if (product.getAvatar() != null) {
             product.getAvatar().setProduct(product);
         }
+
+
+        ProductForSearch productForSearch = ProductForSearch.builder()
+                .id(product.getId())
+                .name(product.getName())
+                .price(product.getPrice())
+                .description(product.getDescription())
+                .article(product.getArticle())
+                .quantitySold(product.getQuantitySold() == null ? 0 : product.getQuantitySold())
+                .rating(product.getRating() == null ? BigDecimal.ZERO : product.getRating())
+                .build();
+        kafkaProducer.sendUpdate(productForSearch);
 
         return productRepository.save(product);
     }
@@ -161,7 +177,7 @@ public class ProductService {
             newProduct.setQuantitySold(product.getQuantitySold());
         }
 
-
+        kafkaProducer.sendUpdate(kafkaProducer.getProductForSearchFromProduct(newProduct));
 
         return productRepository.save(newProduct);
     }
@@ -180,8 +196,11 @@ public class ProductService {
 
         redisTemplate.delete(REDIS_KEY_PREFIX+productUpdatePrice.getId());
 
+        kafkaProducer.sendUpdate(kafkaProducer.getProductForSearchFromProduct(update));
+
         return productRepository.save(update);
     }
+
 
     public long deleteProducts(List<UUID> ids) {
         long count = 0;
@@ -194,10 +213,11 @@ public class ProductService {
             redisTemplate.delete(REDIS_KEY_PREFIX+id);
         }
         productRepository.deleteAllById(ids);
+        kafkaProducer.sendDelete(ids);
+
 
         return count;
     }
-
 
     public Product updateRatingValue(UpdateRating updateRating) {
         UUID id = updateRating.getIdProduct();
@@ -230,6 +250,8 @@ public class ProductService {
 
         redisTemplate.delete(REDIS_KEY_PREFIX+updateRating.getIdProduct());
 
+        kafkaProducer.sendUpdate(kafkaProducer.getProductForSearchFromProduct(update));
+
         return productRepository.save(update);
     }
 
@@ -242,6 +264,6 @@ public class ProductService {
         throw new IllegalArgumentException("Product with id: " + updateAvatar.getId() + " not found");
     }
 
-
+    //todo добавить реализацию фоток
 
 }

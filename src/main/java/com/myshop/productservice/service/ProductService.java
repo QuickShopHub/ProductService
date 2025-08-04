@@ -2,6 +2,7 @@ package com.myshop.productservice.service;
 
 import com.myshop.productservice.dto.UpdateAvatar;
 import com.myshop.productservice.dto.UpdateRating;
+import com.myshop.productservice.repository.Avatar;
 import com.myshop.productservice.repository.AvatarRepository;
 import com.myshop.productservice.repository.Product;
 import com.myshop.productservice.repository.ProductRepository;
@@ -263,6 +264,27 @@ public class ProductService {
             return updateAvatar;
         }
         throw new IllegalArgumentException("Product with id: " + updateAvatar.getId() + " not found");
+    }
+
+
+    public List<String> getAvatar(List<UUID> ids){
+        if(ids.isEmpty()){
+            return List.of();
+        }
+
+        List<Avatar> temp = avatarRepository.getUrlsByProductIds(ids);
+
+        List<String> ans = new ArrayList<>();
+
+        for(UUID id : ids){
+            for(Avatar avatar : temp){
+                if(avatar.getProduct().getId().equals(id)){
+                    ans.add(avatar.getUrl());
+                }
+            }
+        }
+
+        return ans;
     }
 
     //todo добавить реализацию фоток

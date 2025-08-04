@@ -3,6 +3,7 @@ package com.myshop.productservice.controller;
 
 import com.myshop.productservice.dto.UpdateAvatar;
 import com.myshop.productservice.dto.UpdateRating;
+import com.myshop.productservice.repository.Avatar;
 import com.myshop.productservice.repository.Product;
 import com.myshop.productservice.dto.ProductUpdatePrice;
 import com.myshop.productservice.service.ProductService;
@@ -76,6 +77,12 @@ public class ProductController {
     @PutMapping(path = "/avatar")
     public UpdateAvatar updateAvatar(@Valid @RequestBody UpdateAvatar updateAvatar) {
         return productService.updateAvatar(updateAvatar);
+    }
+
+    @GetMapping(path = "/avatar")
+    public List<String> getAvatar(@RequestParam(name = "id") List<UUID> ids) {
+        log.info("Ids length" + ids.size());
+        return productService.getAvatar(ids);
     }
 
 }

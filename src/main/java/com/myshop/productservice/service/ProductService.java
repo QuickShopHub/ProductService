@@ -104,16 +104,7 @@ public class ProductService {
         }
 
 
-        ProductForSearch productForSearch = ProductForSearch.builder()
-                .id(product.getId())
-                .name(product.getName())
-                .price(product.getPrice())
-                .description(product.getDescription())
-                .article(product.getArticle())
-                .quantitySold(product.getQuantitySold() == null ? 0 : product.getQuantitySold())
-                .rating(product.getRating() == null ? BigDecimal.ZERO : product.getRating())
-                .build();
-        kafkaProducer.sendUpdate(productForSearch);
+        kafkaProducer.sendUpdate(kafkaProducer.getProductForSearchFromProduct(product));
 
         return productRepository.save(product);
     }
@@ -261,8 +252,19 @@ public class ProductService {
     @Transactional
     public UpdateAvatar updateAvatar(UpdateAvatar updateAvatar) {
         if(avatarRepository.setUrlByProductId(updateAvatar.getAvatarUrl(), updateAvatar.getId()) == 1){
+
+            Optional<Product> product = productRepository.findById(updateAvatar.getId());
+
+            if(product.isPresent()) {
+                kafkaProducer.sendUpdate(kafkaProducer.getProductForSearchFromProduct(product.get()));
+            }
+
             return updateAvatar;
         }
+
+
+
+
         throw new IllegalArgumentException("Product with id: " + updateAvatar.getId() + " not found");
     }
 

@@ -36,6 +36,7 @@ public class kafkaProducer {
         newProductForSearch.setQuantitySold(product.getQuantitySold());
         newProductForSearch.setRating(product.getRating());
         newProductForSearch.setArticle(product.getArticle());
+        newProductForSearch.setUrl(product.getAvatar().getUrl());
 
         return newProductForSearch;
     }

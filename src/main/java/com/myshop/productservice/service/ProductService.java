@@ -212,6 +212,7 @@ public class ProductService {
             }
             redisTemplate.delete(REDIS_KEY_PREFIX+id);
         }
+
         productRepository.deleteAllById(ids);
         kafkaProducer.sendDelete(ids);
 

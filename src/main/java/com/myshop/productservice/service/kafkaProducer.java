@@ -1,6 +1,7 @@
 package com.myshop.productservice.service;
 
 
+import com.myshop.productservice.dto.searchService.DeleteDTO;
 import com.myshop.productservice.dto.searchService.ProductForSearch;
 import com.myshop.productservice.repository.Product;
 import lombok.extern.slf4j.Slf4j;
@@ -17,9 +18,9 @@ public class kafkaProducer {
     private final KafkaTemplate<String, ProductForSearch> kafkaTemplateUpdate;
 
 
-    private final KafkaTemplate<String, List<UUID>> kafkaTemplateDelete;
+    private final KafkaTemplate<String, DeleteDTO> kafkaTemplateDelete;
 
-    public kafkaProducer(KafkaTemplate<String, ProductForSearch> kafkaTemplate, KafkaTemplate<String, List<UUID>> kafkaTemplateDelete) {
+    public kafkaProducer(KafkaTemplate<String, ProductForSearch> kafkaTemplate, KafkaTemplate<String, DeleteDTO> kafkaTemplateDelete) {
         this.kafkaTemplateUpdate = kafkaTemplate;
         this.kafkaTemplateDelete = kafkaTemplateDelete;
     }
@@ -46,8 +47,11 @@ public class kafkaProducer {
 
 
     public void sendDelete(List<UUID> ids) {
-        log.info("send to topic `deleteElastic` {} ids to delete", ids.size());
-        kafkaTemplateDelete.send("deleteElastic", ids);
+        log.info("send to topic `deleteElastic` {}  to delete", ids);
+
+        DeleteDTO deleteDTO = new DeleteDTO();
+        deleteDTO.setIds(ids);
+        kafkaTemplateDelete.send("deleteElastic", deleteDTO);
     }
 
 }

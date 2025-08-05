@@ -35,14 +35,14 @@ public class ProductService {
     private final RedisTemplate<String, Product> redisTemplate;
 
     private final ProductRepository productRepository;
-    private final AvatarRepository avatarRepository;
+
 
     @Autowired
-    public ProductService(kafkaProducer kafkaProducer, RedisTemplate<String, Product> redisTemplate, ProductRepository productRepository, AvatarRepository avatarRepository) {
+    public ProductService(kafkaProducer kafkaProducer, RedisTemplate<String, Product> redisTemplate, ProductRepository productRepository) {
         this.kafkaProducer = kafkaProducer;
         this.redisTemplate = redisTemplate;
         this.productRepository = productRepository;
-        this.avatarRepository = avatarRepository;
+
     }
 
     public List<Product> getProductsById(List<UUID> ids) {
@@ -248,47 +248,7 @@ public class ProductService {
         return productRepository.save(update);
     }
 
-    //-------------------АВАТАРКИ и ФОТКИ----------------------------------------
-    @Transactional
-    public UpdateAvatar updateAvatar(UpdateAvatar updateAvatar) {
-        if(avatarRepository.setUrlByProductId(updateAvatar.getAvatarUrl(), updateAvatar.getId()) == 1){
-
-            Optional<Product> product = productRepository.findById(updateAvatar.getId());
-
-            if(product.isPresent()) {
-                kafkaProducer.sendUpdate(kafkaProducer.getProductForSearchFromProduct(product.get()));
-            }
-
-            return updateAvatar;
-        }
 
 
-
-
-        throw new IllegalArgumentException("Product with id: " + updateAvatar.getId() + " not found");
-    }
-
-
-    public List<String> getAvatar(List<UUID> ids){
-        if(ids.isEmpty()){
-            return List.of();
-        }
-
-        List<Avatar> temp = avatarRepository.getUrlsByProductIds(ids);
-
-        List<String> ans = new ArrayList<>();
-
-        for(UUID id : ids){
-            for(Avatar avatar : temp){
-                if(avatar.getProduct().getId().equals(id)){
-                    ans.add(avatar.getUrl());
-                }
-            }
-        }
-
-        return ans;
-    }
-
-    //todo добавить реализацию фоток
 
 }

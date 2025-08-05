@@ -4,8 +4,10 @@ package com.myshop.productservice.controller;
 import com.myshop.productservice.dto.UpdateAvatar;
 import com.myshop.productservice.dto.UpdateRating;
 import com.myshop.productservice.repository.Avatar;
+import com.myshop.productservice.repository.AvatarRepository;
 import com.myshop.productservice.repository.Product;
 import com.myshop.productservice.dto.ProductUpdatePrice;
+import com.myshop.productservice.service.AvatarService;
 import com.myshop.productservice.service.ProductService;
 
 import jakarta.validation.Valid;
@@ -25,8 +27,11 @@ public class ProductController {
 
     private final ProductService productService;
 
-    public ProductController(ProductService productService) {
+    private final AvatarService avatarService;
+
+    public ProductController(ProductService productService, AvatarService avatarService) {
         this.productService = productService;
+        this.avatarService = avatarService;
     }
 
     @GetMapping()
@@ -76,13 +81,13 @@ public class ProductController {
 
     @PutMapping(path = "/avatar")
     public UpdateAvatar updateAvatar(@Valid @RequestBody UpdateAvatar updateAvatar) {
-        return productService.updateAvatar(updateAvatar);
+        return avatarService.updateAvatar(updateAvatar);
     }
 
     @GetMapping(path = "/avatar")
     public List<String> getAvatar(@RequestParam(name = "id") List<UUID> ids) {
         log.info("Ids length" + ids.size());
-        return productService.getAvatar(ids);
+        return avatarService.getAvatar(ids);
     }
 
 }

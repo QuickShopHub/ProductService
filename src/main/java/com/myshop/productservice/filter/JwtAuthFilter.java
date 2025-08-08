@@ -2,6 +2,7 @@ package com.myshop.productservice.filter;
 
 import com.myshop.productservice.service.JwtService;
 import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.ExpiredJwtException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -36,8 +37,7 @@ public class JwtAuthFilter extends OncePerRequestFilter {
         String authHeader = request.getHeader("Authorization");
 
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-            log.error("Invalid JWT Token");
+            chain.doFilter(request, response);
             return;
         }
 
@@ -59,22 +59,21 @@ public class JwtAuthFilter extends OncePerRequestFilter {
             Authentication auth = new UsernamePasswordAuthenticationToken(username, null, authorities);
             SecurityContextHolder.getContext().setAuthentication(auth);
 
-            System.out.println("Authenticated: " + auth.isAuthenticated());
-            System.out.println("Authorities: " + auth.getAuthorities());
-            System.out.println("Has ROLE_USER? " + auth.getAuthorities().contains(new SimpleGrantedAuthority("ROLE_USER")));
             log.info("success authentication");
-        } catch (RuntimeException e) {
+        } catch (ExpiredJwtException ex) {
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            response.setContentType("application/json;charset=UTF-8");
+            String json = String.format("Token expired");
+            response.getWriter().write(json);
+            response.getWriter().flush();
+            return;
+        }
+        catch (RuntimeException e) {
             log.error("Invalid JWT Token", e);
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
             return;
         }
-        log.info("Next filter chain");
         chain.doFilter(request, response);
-        log.info("end filter chain");
+    }
 
-    }
-    @Override
-    protected boolean shouldNotFilter(HttpServletRequest request) {
-        return request.getRequestURI().startsWith("/api/app/me");
-    }
 }

@@ -12,6 +12,9 @@ import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.web.PagedResourcesAssembler;
+import org.springframework.hateoas.EntityModel;
+import org.springframework.hateoas.PagedModel;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.annotation.Secured;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -31,14 +34,15 @@ public class ProductController {
 
     private final AvatarService avatarService;
 
+
     public ProductController(ProductService productService, AvatarService avatarService) {
         this.productService = productService;
         this.avatarService = avatarService;
     }
 
 
-    @PreAuthorize("hasRole('USER')")
-    @GetMapping()
+
+    @GetMapping(path = "/id")
     public List<Product> getProductsById(@Valid @RequestParam(name = "id") List<UUID> id) {
         return productService.getProductsById(id);
     }
@@ -51,10 +55,13 @@ public class ProductController {
 
     @PreAuthorize("hasRole('USER')")
     @GetMapping(path = "/allProducts")
-    public Page<Product> getAllProducts(
+    public ResponseEntity<PagedModel<EntityModel<Product>>> getAllProducts(
             @RequestParam(defaultValue = "0", name = "page", required = false) int page,
-            @RequestParam(defaultValue = "1", name = "size", required = false) int size) {
-        return productService.getAllProducts(PageRequest.of(page, size));
+            @RequestParam(defaultValue = "1", name = "size", required = false) int size,
+            PagedResourcesAssembler<Product> pagedResourcesAssembler) {
+        Page<Product> productPage = productService.getAllProducts(PageRequest.of(page, size));
+        PagedModel<EntityModel<Product>> pagedModel = pagedResourcesAssembler.toModel(productPage);
+        return ResponseEntity.ok(pagedModel);
     }
 
     @PreAuthorize("hasRole('USER')")
@@ -95,8 +102,8 @@ public class ProductController {
         return avatarService.updateAvatar(updateAvatar);
     }
 
-    @PreAuthorize("hasRole('USER')")
-    @GetMapping(path = "/avatar")
+
+    @GetMapping(path = "/avatar_id")
     public List<String> getAvatar(@RequestParam(name = "id") List<UUID> ids) {
         log.info("Ids length" + ids.size());
         return avatarService.getAvatar(ids);

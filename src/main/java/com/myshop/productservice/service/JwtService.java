@@ -31,7 +31,7 @@ public class JwtService {
                     .getBody();
         } catch (ExpiredJwtException ex) {
             // Токен просрочен
-            throw new RuntimeException("JWT token is expired", ex);
+            throw ex;
         } catch (JwtException | IllegalArgumentException ex) {
             // Токен некорректный, неверный, подпись не совпадает и т.п.
             throw new RuntimeException("Invalid JWT token", ex);

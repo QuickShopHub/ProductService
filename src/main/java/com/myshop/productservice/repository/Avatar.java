@@ -9,8 +9,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.springframework.data.redis.core.RedisHash;
 
-import java.io.Serial;
-import java.io.Serializable;
+
 import java.util.UUID;
 
 @RedisHash

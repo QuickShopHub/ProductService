@@ -1,11 +1,10 @@
 package com.myshop.productservice.controller;
 
 
-import com.myshop.productservice.dto.UpdateAvatar;
-import com.myshop.productservice.dto.UpdateRating;
+import com.myshop.productservice.dto.*;
+import com.myshop.productservice.repository.Photos;
 import com.myshop.productservice.repository.Product;
-import com.myshop.productservice.dto.ProductUpdatePrice;
-import com.myshop.productservice.service.AvatarService;
+import com.myshop.productservice.service.PhotoService;
 import com.myshop.productservice.service.ProductService;
 
 import jakarta.validation.Valid;
@@ -16,13 +15,10 @@ import org.springframework.data.web.PagedResourcesAssembler;
 import org.springframework.hateoas.EntityModel;
 import org.springframework.hateoas.PagedModel;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.annotation.Secured;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.Map;
 import java.util.UUID;
 
 @Slf4j
@@ -32,12 +28,12 @@ public class ProductController {
 
     private final ProductService productService;
 
-    private final AvatarService avatarService;
+    private final PhotoService photoService;
 
 
-    public ProductController(ProductService productService, AvatarService avatarService) {
+    public ProductController(ProductService productService, PhotoService photoService) {
         this.productService = productService;
-        this.avatarService = avatarService;
+        this.photoService = photoService;
     }
 
 
@@ -49,8 +45,8 @@ public class ProductController {
 
     @PreAuthorize("hasRole('USER')")
     @PostMapping()
-    public Product addProduct(@Valid @RequestBody Product product) {
-        return productService.addProduct(product);
+    public Product addProduct(@RequestBody NewProduct newProduct) {
+        return productService.addProduct(newProduct);
     }
 
     @PreAuthorize("hasRole('USER')")
@@ -99,14 +95,30 @@ public class ProductController {
     @PreAuthorize("hasRole('USER')")
     @PutMapping(path = "/avatar")
     public UpdateAvatar updateAvatar(@Valid @RequestBody UpdateAvatar updateAvatar) {
-        return avatarService.updateAvatar(updateAvatar);
+        return photoService.setAvatar(updateAvatar);
     }
 
 
     @GetMapping(path = "/avatar_id")
     public List<String> getAvatar(@RequestParam(name = "id") List<UUID> ids) {
         log.info("Ids length" + ids.size());
-        return avatarService.getAvatar(ids);
+        return photoService.getAvatar(ids);
+    }
+
+    @GetMapping(path = "/photo")
+    public List<Photos> getPhotos(@RequestParam(name = "id") List<UUID> ids) {
+        return photoService.getPhotos(ids);
+    }
+    @PreAuthorize("hasRole('USER')")
+    @DeleteMapping(path = "/photo/{id}")
+    public ResponseEntity<String> deletePhotos(@PathVariable UUID id) {
+        return photoService.deletePhoto(id);
+    }
+
+    @PreAuthorize("hasRole('USER')")
+    @PutMapping(path = "/photo")
+    public ResponseEntity<String> addPhotos(@RequestBody NewPhotos newPhotos) {
+        return photoService.addPhotos(newPhotos);
     }
 
 }

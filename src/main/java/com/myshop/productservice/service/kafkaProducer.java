@@ -3,6 +3,8 @@ package com.myshop.productservice.service;
 
 import com.myshop.productservice.dto.searchService.DeleteDTO;
 import com.myshop.productservice.dto.searchService.ProductForSearch;
+import com.myshop.productservice.repository.Avatar;
+import com.myshop.productservice.repository.AvatarRepository;
 import com.myshop.productservice.repository.Product;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.core.KafkaTemplate;
@@ -17,11 +19,14 @@ public class kafkaProducer {
 
     private final KafkaTemplate<String, ProductForSearch> kafkaTemplateUpdate;
 
+    private final AvatarRepository avatarRepository;
+
 
     private final KafkaTemplate<String, DeleteDTO> kafkaTemplateDelete;
 
-    public kafkaProducer(KafkaTemplate<String, ProductForSearch> kafkaTemplate, KafkaTemplate<String, DeleteDTO> kafkaTemplateDelete) {
+    public kafkaProducer(KafkaTemplate<String, ProductForSearch> kafkaTemplate, AvatarRepository avatarRepository, KafkaTemplate<String, DeleteDTO> kafkaTemplateDelete) {
         this.kafkaTemplateUpdate = kafkaTemplate;
+        this.avatarRepository = avatarRepository;
         this.kafkaTemplateDelete = kafkaTemplateDelete;
     }
 
@@ -33,10 +38,12 @@ public class kafkaProducer {
         newProductForSearch.setName(product.getName());
         newProductForSearch.setPrice(product.getPrice());
         newProductForSearch.setDescription(product.getDescription());
-        newProductForSearch.setQuantitySold(product.getQuantitySold());
-        newProductForSearch.setRating(product.getRating());
+        newProductForSearch.setQuantitySold(product.getQuantitySold() != null ? product.getQuantitySold() : 0);
+        newProductForSearch.setRating(product.getRating() != null ? product.getRating() : null);
         newProductForSearch.setArticle(product.getArticle());
-        newProductForSearch.setUrl(product.getAvatar().getUrl());
+
+        Avatar avatar = avatarRepository.findByProductId(product.getId());
+        newProductForSearch.setUrl(avatar.getUrl());
 
         return newProductForSearch;
     }

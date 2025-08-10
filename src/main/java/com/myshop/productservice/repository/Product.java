@@ -6,13 +6,13 @@ import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.springframework.data.redis.core.RedisHash;
 
 
-import java.io.Serial;
-import java.io.Serializable;
+
 import java.math.BigDecimal;
 import java.time.LocalDate;
 
@@ -56,15 +56,12 @@ public class Product{
     @Column(name = "idvendor")
     private UUID idVendor;
 
-    private BigDecimal rating;
+    private BigDecimal rating = BigDecimal.ZERO;
 
     @Column(name = "countgrades")
-    private Long countGrades;
+    private Long countGrades = 0L;
 
     @Column(name = "quantitysold")
-    private Long quantitySold;
+    private Long quantitySold = 0L;
 
-    @OneToOne(cascade = CascadeType.ALL, mappedBy = "product", orphanRemoval = true)
-    @JsonManagedReference
-    private Avatar avatar;
 }

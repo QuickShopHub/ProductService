@@ -1,5 +1,6 @@
 package com.myshop.productservice.service;
 
+import com.myshop.productservice.dto.NewProduct;
 import com.myshop.productservice.dto.UpdateAvatar;
 import com.myshop.productservice.dto.UpdateRating;
 import com.myshop.productservice.repository.Avatar;
@@ -36,13 +37,15 @@ public class ProductService {
 
     private final ProductRepository productRepository;
 
+    private final PhotoService photoService;
+
 
     @Autowired
-    public ProductService(kafkaProducer kafkaProducer, RedisTemplate<String, Product> redisTemplate, ProductRepository productRepository) {
+    public ProductService(kafkaProducer kafkaProducer, RedisTemplate<String, Product> redisTemplate, ProductRepository productRepository, PhotoService photoService) {
         this.kafkaProducer = kafkaProducer;
         this.redisTemplate = redisTemplate;
         this.productRepository = productRepository;
-
+        this.photoService = photoService;
     }
 
     public List<Product> getProductsById(List<UUID> ids) {
@@ -86,9 +89,10 @@ public class ProductService {
         return onSend;
     }
 
+    @Transactional
+    public Product addProduct(NewProduct newProduct) {
 
-    public Product addProduct(Product product) {
-
+        Product product = newProduct.getProduct();
 
         Optional<Product> temp = productRepository.findByArticle(product.getArticle());
 
@@ -99,14 +103,20 @@ public class ProductService {
         product.setId(UUID.randomUUID());
         product.setCreatedAt(LocalDate.now());
 
-        if (product.getAvatar() != null) {
-            product.getAvatar().setProduct(product);
-        }
+        productRepository.save(product);
 
+        photoService.photoForNewProduct(newProduct.getPhotos(), product);
+
+        UpdateAvatar updateAvatar = new  UpdateAvatar();
+
+        updateAvatar.setAvatar(newProduct.getAvatar());
+        updateAvatar.getAvatar().setProduct(product);
+        updateAvatar.getAvatar().setId(UUID.randomUUID());
+        photoService.setAvatar(updateAvatar);
 
         kafkaProducer.sendUpdate(kafkaProducer.getProductForSearchFromProduct(product));
 
-        return productRepository.save(product);
+        return product;
     }
 
     public Page<Product> getAllProducts(Pageable pageable) {
@@ -131,10 +141,7 @@ public class ProductService {
 
         Product newProduct = temp.get();
 
-        //Меняем поля
-        if(product.getAvatar() != null) {
-            newProduct.getAvatar().setUrl(product.getAvatar().getUrl());
-        }
+
         if(product.getName() != null) {
             newProduct.setName(product.getName());
         }

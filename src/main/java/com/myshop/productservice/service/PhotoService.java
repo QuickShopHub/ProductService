@@ -30,17 +30,25 @@ public class PhotoService {
 
     @Transactional
     public UpdateAvatar setAvatar(UpdateAvatar updateAvatar) {
-        Optional<Product> temp = productRepository.findById(updateAvatar.getId());
-
-        if(temp.isEmpty()) {
-            throw new RuntimeException("Product not found");
+        Optional<Product> temp;
+        if(updateAvatar.getId() != null) {
+            temp = productRepository.findById(updateAvatar.getId());
+            if(temp.isEmpty()) {
+                throw new RuntimeException("Product not found");
+            }
         }
+
 
         if(updateAvatar.getAvatar().getProduct() == null) {
             avatarRepository.setUrlByProductId(updateAvatar.getAvatar().getUrl(), updateAvatar.getId());
         }
         else {
             avatarRepository.save(updateAvatar.getAvatar());
+
+        }
+        temp = productRepository.findById(updateAvatar.getAvatar().getProduct().getId());
+        if(temp.isEmpty()) {
+            throw new RuntimeException("Product not found");
         }
         kafkaProducer.sendUpdate(kafkaProducer.getProductForSearchFromProduct(temp.get()));
         return updateAvatar;

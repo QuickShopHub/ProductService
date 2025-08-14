@@ -6,6 +6,7 @@ import com.myshop.productservice.dto.searchService.ProductForSearch;
 import com.myshop.productservice.repository.Avatar;
 import com.myshop.productservice.repository.AvatarRepository;
 import com.myshop.productservice.repository.Product;
+import com.myshop.productservice.repository.ProductRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
@@ -23,11 +24,13 @@ public class kafkaProducer {
 
 
     private final KafkaTemplate<String, DeleteDTO> kafkaTemplateDelete;
+    private final ProductRepository productRepository;
 
-    public kafkaProducer(KafkaTemplate<String, ProductForSearch> kafkaTemplate, AvatarRepository avatarRepository, KafkaTemplate<String, DeleteDTO> kafkaTemplateDelete) {
+    public kafkaProducer(KafkaTemplate<String, ProductForSearch> kafkaTemplate, AvatarRepository avatarRepository, KafkaTemplate<String, DeleteDTO> kafkaTemplateDelete, ProductRepository productRepository) {
         this.kafkaTemplateUpdate = kafkaTemplate;
         this.avatarRepository = avatarRepository;
         this.kafkaTemplateDelete = kafkaTemplateDelete;
+        this.productRepository = productRepository;
     }
 
 
@@ -44,6 +47,10 @@ public class kafkaProducer {
 
         Avatar avatar = avatarRepository.findByProductId(product.getId());
         newProductForSearch.setUrl(avatar.getUrl());
+
+        newProductForSearch.setCountComments(productRepository.getCountCommentsByProductId(product.getId()));
+
+
 
         return newProductForSearch;
     }

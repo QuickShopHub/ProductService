@@ -13,4 +13,7 @@ public interface ProductRepository extends JpaRepository<Product, UUID> {
 
     @Query(value = "SELECT * FROM products WHERE article = :article", nativeQuery = true)
     Optional<Product> findByArticle(String article);
+
+    @Query(value = "SELECT COUNT(*) FROM comments WHERE product_id=:id",  nativeQuery = true)
+    long getCountCommentsByProductId(UUID id);
 }

@@ -2,6 +2,7 @@ package com.myshop.productservice.service;
 
 import com.myshop.productservice.dto.NewPhotos;
 import com.myshop.productservice.dto.UpdateAvatar;
+import com.myshop.productservice.filter.JwtAuthFilter;
 import com.myshop.productservice.repository.*;
 import jakarta.transaction.Transactional;
 import org.springframework.http.HttpStatus;
@@ -21,11 +22,14 @@ public class PhotoService {
 
     private final PhotosRepository photosRepository;
 
-    public PhotoService(AvatarRepository avatarRepository, ProductRepository productRepository, kafkaProducer kafkaProducer, PhotosRepository photosRepository) {
+    private final JwtAuthFilter jwtAuthFilter;
+
+    public PhotoService(AvatarRepository avatarRepository, ProductRepository productRepository, kafkaProducer kafkaProducer, PhotosRepository photosRepository, JwtAuthFilter jwtAuthFilter) {
         this.avatarRepository = avatarRepository;
         this.productRepository = productRepository;
         this.kafkaProducer = kafkaProducer;
         this.photosRepository = photosRepository;
+        this.jwtAuthFilter = jwtAuthFilter;
     }
 
     @Transactional
@@ -36,6 +40,9 @@ public class PhotoService {
             if(temp.isEmpty()) {
                 throw new RuntimeException("Product not found");
             }
+            if(!jwtAuthFilter.tryDo(temp.get().getIdVendor())){
+                throw new RuntimeException("You don't have access");
+            }
         }
 
 
@@ -44,7 +51,6 @@ public class PhotoService {
         }
         else {
             avatarRepository.save(updateAvatar.getAvatar());
-
         }
         temp = productRepository.findById(updateAvatar.getAvatar().getProduct().getId());
         if(temp.isEmpty()) {
@@ -91,6 +97,15 @@ public class PhotoService {
     }
 
     public ResponseEntity<String> deletePhoto(UUID id){
+
+        Optional<Photos> temp = photosRepository.findById(id);
+        if(temp.isEmpty()){
+            return ResponseEntity.notFound().build();
+        }
+        if(!jwtAuthFilter.tryDo(temp.get().getProduct().getIdVendor())){
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+
         photosRepository.deleteById(id);
         return ResponseEntity.ok().build();
     }
@@ -101,6 +116,11 @@ public class PhotoService {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Product not found");
         }
         Product product = temp.get();
+
+        if(!jwtAuthFilter.tryDo(product.getIdVendor())){
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("You don't have access");
+        }
+
         for(String url : newPhotos.getUrls()){
             Photos photo = new Photos();
             photo.setUrl(url);

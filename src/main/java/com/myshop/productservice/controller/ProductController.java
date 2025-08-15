@@ -31,6 +31,7 @@ public class ProductController {
     private final PhotoService photoService;
 
 
+
     public ProductController(ProductService productService, PhotoService photoService) {
         this.productService = productService;
         this.photoService = photoService;
@@ -60,20 +61,19 @@ public class ProductController {
         return ResponseEntity.ok(pagedModel);
     }
 
-    @PreAuthorize("hasRole('USER')")
+    @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
     @PutMapping()
-    public Product updateProduct(@Valid @RequestBody Product product) {
-
+    public ResponseEntity<Product> updateProduct(@Valid @RequestBody Product product) {
         return productService.updateAll(product);
     }
 
-    @PreAuthorize("hasRole('USER')")
+    @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
     @PatchMapping(path = "/price")
-    public Product updatePrice(@Valid @RequestBody ProductUpdatePrice product) {
+    public ResponseEntity<Product> updatePrice(@Valid @RequestBody ProductUpdatePrice product) {
         return productService.updatePrice(product);
     }
 
-    @PreAuthorize("hasRole('USER')")
+    @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
     @DeleteMapping()
     public ResponseEntity<String>  deleteProducts(@Valid @RequestParam(name = "id") List<UUID> ids) {
 
@@ -92,7 +92,7 @@ public class ProductController {
 
     //-------------------АВАТАРКИ и ФОТКИ----------------------------------------
 
-    @PreAuthorize("hasRole('USER')")
+    @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
     @PutMapping(path = "/avatar")
     public UpdateAvatar updateAvatar(@Valid @RequestBody UpdateAvatar updateAvatar) {
         return photoService.setAvatar(updateAvatar);
@@ -109,13 +109,13 @@ public class ProductController {
     public List<Photos> getPhotos(@RequestParam(name = "id") List<UUID> ids) {
         return photoService.getPhotos(ids);
     }
-    @PreAuthorize("hasRole('USER')")
+    @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
     @DeleteMapping(path = "/photo/{id}")
     public ResponseEntity<String> deletePhotos(@PathVariable UUID id) {
         return photoService.deletePhoto(id);
     }
 
-    @PreAuthorize("hasRole('USER')")
+    @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
     @PutMapping(path = "/photo")
     public ResponseEntity<String> addPhotos(@RequestBody NewPhotos newPhotos) {
         return photoService.addPhotos(newPhotos);

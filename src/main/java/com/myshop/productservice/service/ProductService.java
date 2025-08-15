@@ -3,6 +3,7 @@ package com.myshop.productservice.service;
 import com.myshop.productservice.dto.NewProduct;
 import com.myshop.productservice.dto.UpdateAvatar;
 import com.myshop.productservice.dto.UpdateRating;
+import com.myshop.productservice.filter.JwtAuthFilter;
 import com.myshop.productservice.repository.Avatar;
 import com.myshop.productservice.repository.AvatarRepository;
 import com.myshop.productservice.repository.Product;
@@ -15,6 +16,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 
@@ -39,13 +42,16 @@ public class ProductService {
 
     private final PhotoService photoService;
 
+    private final JwtAuthFilter jwtAuthFilter;
+
 
     @Autowired
-    public ProductService(kafkaProducer kafkaProducer, RedisTemplate<String, Product> redisTemplate, ProductRepository productRepository, PhotoService photoService) {
+    public ProductService(kafkaProducer kafkaProducer, RedisTemplate<String, Product> redisTemplate, ProductRepository productRepository, PhotoService photoService, JwtAuthFilter jwtAuthFilter) {
         this.kafkaProducer = kafkaProducer;
         this.redisTemplate = redisTemplate;
         this.productRepository = productRepository;
         this.photoService = photoService;
+        this.jwtAuthFilter = jwtAuthFilter;
     }
 
     public List<Product> getProductsById(List<UUID> ids) {
@@ -125,7 +131,13 @@ public class ProductService {
 
 
 
-    public Product updateAll(Product product) {
+    public ResponseEntity<Product> updateAll(Product product) {
+
+        if(!jwtAuthFilter.tryDo(product.getIdVendor())){
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+
+
         Optional<Product> temp = productRepository.findById(product.getId());
 
         if(temp.isEmpty()) {
@@ -178,41 +190,47 @@ public class ProductService {
 
         kafkaProducer.sendUpdate(kafkaProducer.getProductForSearchFromProduct(newProduct));
 
-        return productRepository.save(newProduct);
+        return ResponseEntity.ok(productRepository.save(newProduct));
     }
 
 
 
 
-    public Product updatePrice(ProductUpdatePrice productUpdatePrice) {
+    public ResponseEntity<Product> updatePrice(ProductUpdatePrice productUpdatePrice) {
         UUID id = productUpdatePrice.getId();
         Optional<Product> temp = productRepository.findById(id);
         if(temp.isEmpty()) {
             throw new IllegalArgumentException("Product with id: " + productUpdatePrice.getId() + "is not found");
         }
         Product update = temp.get();
+
+        if(!jwtAuthFilter.tryDo(update.getIdVendor())){
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+
         update.setPrice(productUpdatePrice.getPrice());
 
         redisTemplate.delete(REDIS_KEY_PREFIX+productUpdatePrice.getId());
 
         kafkaProducer.sendUpdate(kafkaProducer.getProductForSearchFromProduct(update));
 
-        return productRepository.save(update);
+        return ResponseEntity.ok(productRepository.save(update));
     }
 
 
     public long deleteProducts(List<UUID> ids) {
         long count = 0;
-
+        List<UUID> deletedIds = new ArrayList<>();
         for (UUID id : ids) {
             Optional<Product> temp = productRepository.findById(id);
-            if(temp.isPresent()) {
+            if(temp.isPresent() && jwtAuthFilter.tryDo(temp.get().getIdVendor())) {
                 count++;
+                redisTemplate.delete(REDIS_KEY_PREFIX+id);
+                deletedIds.add(id);
             }
-            redisTemplate.delete(REDIS_KEY_PREFIX+id);
         }
 
-        productRepository.deleteAllById(ids);
+        productRepository.deleteAllById(deletedIds);
         kafkaProducer.sendDelete(ids);
 
 

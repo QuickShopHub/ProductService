@@ -18,6 +18,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 
@@ -271,6 +272,14 @@ public class ProductService {
         kafkaProducer.sendUpdate(kafkaProducer.getProductForSearchFromProduct(update));
 
         return productRepository.save(update);
+    }
+
+    @Scheduled(cron = "@daily")
+    public void updateCountComments() {
+        List<Product> products = productRepository.findAll();
+        for (Product product : products) {
+            productRepository.setCommentsCount(productRepository.getCountCommentsByProductId(product.getId()));
+        }
     }
 
 

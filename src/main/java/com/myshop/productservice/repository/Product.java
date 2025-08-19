@@ -64,4 +64,7 @@ public class Product{
     @Column(name = "quantitysold")
     private Long quantitySold = 0L;
 
+    @Column(name = "count_comments")
+    private long countComments;
+
 }

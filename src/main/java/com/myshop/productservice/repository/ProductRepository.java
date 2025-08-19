@@ -1,6 +1,7 @@
 package com.myshop.productservice.repository;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 
 
@@ -16,4 +17,9 @@ public interface ProductRepository extends JpaRepository<Product, UUID> {
 
     @Query(value = "SELECT COUNT(*) FROM comments WHERE product_id=:id",  nativeQuery = true)
     long getCountCommentsByProductId(UUID id);
+
+    @Modifying
+    @Query(value = "INSERT INTO products(count_comments) VALUES(:count)",   nativeQuery = true)
+    void setCommentsCount(long count);
+
 }

@@ -31,12 +31,10 @@ public class ProductController {
     private final PhotoService photoService;
 
 
-
     public ProductController(ProductService productService, PhotoService photoService) {
         this.productService = productService;
         this.photoService = photoService;
     }
-
 
 
     @GetMapping(path = "/id")
@@ -106,8 +104,8 @@ public class ProductController {
     }
 
     @GetMapping(path = "/photo")
-    public List<Photos> getPhotos(@RequestParam(name = "id") List<UUID> ids) {
-        return photoService.getPhotos(ids);
+    public List<Photos>  getPhotos(@RequestParam(name = "id") UUID id) {
+        return photoService.getPhotos(id);
     }
     @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
     @DeleteMapping(path = "/photo/{id}")
@@ -120,5 +118,4 @@ public class ProductController {
     public ResponseEntity<String> addPhotos(@RequestBody NewPhotos newPhotos) {
         return photoService.addPhotos(newPhotos);
     }
-
 }

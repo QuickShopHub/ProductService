@@ -89,11 +89,9 @@ public class PhotoService {
         }
     }
 
-    public List<Photos> getPhotos(List<UUID> ids){
-        if(ids.isEmpty()){
-            return List.of();
-        }
-        return photosRepository.findAllById(ids);
+    public List<Photos>  getPhotos(UUID id){
+
+        return photosRepository.findAllByProductId(id);
     }
 
     public ResponseEntity<String> deletePhoto(UUID id){

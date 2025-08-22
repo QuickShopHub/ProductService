@@ -4,9 +4,12 @@ package com.myshop.productservice.controller;
 import com.myshop.productservice.dto.*;
 import com.myshop.productservice.repository.Photos;
 import com.myshop.productservice.repository.Product;
+import com.myshop.productservice.repository.ProductRepository;
+import com.myshop.productservice.repository.UpdateRatingEntity;
 import com.myshop.productservice.service.PhotoService;
 import com.myshop.productservice.service.ProductService;
 
+import com.myshop.productservice.service.RatingService;
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -30,10 +33,13 @@ public class ProductController {
 
     private final PhotoService photoService;
 
+    private final RatingService ratingService;
 
-    public ProductController(ProductService productService, PhotoService photoService) {
+
+    public ProductController(ProductService productService, PhotoService photoService, RatingService ratingService) {
         this.productService = productService;
         this.photoService = photoService;
+        this.ratingService = ratingService;
     }
 
 
@@ -80,12 +86,6 @@ public class ProductController {
         return ResponseEntity.ok( productService.deleteProducts(ids));
     }
 
-    @PreAuthorize("hasRole('USER')")
-    @PatchMapping(path = "/rating")
-    public Product updateRating(@Valid @RequestBody UpdateRating updateRating) {
-        return productService.updateRatingValue(updateRating);
-    }
-
     //-------------------АВАТАРКИ и ФОТКИ----------------------------------------
 
     @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
@@ -116,4 +116,20 @@ public class ProductController {
     public ResponseEntity<String> addPhotos(@RequestBody NewPhotos newPhotos) {
         return photoService.addPhotos(newPhotos);
     }
+
+
+    //=====================================Рейтинг==========================================================
+
+    @PreAuthorize("hasRole('USER')")
+    @PostMapping(path = "/rating")
+    public ResponseEntity<UpdateRatingEntity> setRating(@RequestBody UpdateRatingEntity updateRatingEntity){
+        return ratingService.setRating(updateRatingEntity);
+    }
+
+    @GetMapping(path = "/rating")
+    public ResponseEntity<UpdateRatingEntity> getRating(@RequestParam UUID product_id, @RequestParam UUID user_id){
+        return ratingService.getRating(product_id, user_id);
+    }
+
+
 }

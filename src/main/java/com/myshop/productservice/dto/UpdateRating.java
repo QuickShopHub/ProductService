@@ -15,4 +15,5 @@ public class UpdateRating {
     private UUID idProduct;
     @NotNull()
     private BigDecimal grade;
+
 }

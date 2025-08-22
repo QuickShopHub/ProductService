@@ -231,41 +231,6 @@ public class ProductService {
         return deletedProduct;
     }
 
-    public Product updateRatingValue(UpdateRating updateRating) {
-        UUID id = updateRating.getIdProduct();
-        Optional<Product> temp = productRepository.findById(id);
-        if(temp.isEmpty()) {
-            throw new IllegalArgumentException("Product with id: " + updateRating.getIdProduct() + "is not found");
-        }
-
-        Product update = temp.get();
-
-        BigDecimal rating = update.getRating();
-        long countGrades =  update.getCountGrades();
-
-        BigDecimal longAsBigDecimal = BigDecimal.valueOf(countGrades);
-
-        if (rating.compareTo(BigDecimal.ZERO) != 0) {
-            rating = rating.multiply(longAsBigDecimal);
-            rating = rating.add(updateRating.getGrade());
-        }
-        else{
-            rating = updateRating.getGrade();
-        }
-
-        countGrades+=1;
-
-        rating = rating.divide(BigDecimal.valueOf(countGrades), 1, RoundingMode.HALF_UP);
-
-        update.setRating(rating);
-        update.setCountGrades(countGrades);
-
-        redisTemplate.delete(REDIS_KEY_PREFIX+updateRating.getIdProduct());
-
-        kafkaProducer.sendUpdate(kafkaProducer.getProductForSearchFromProduct(update));
-
-        return productRepository.save(update);
-    }
 
     @Scheduled(cron = "@daily")
     public void updateCountComments() {

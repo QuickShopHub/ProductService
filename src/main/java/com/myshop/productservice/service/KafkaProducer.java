@@ -8,27 +8,30 @@ import com.myshop.productservice.repository.AvatarRepository;
 import com.myshop.productservice.repository.Product;
 import com.myshop.productservice.repository.ProductRepository;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 @Slf4j
 @Service
-public class kafkaProducer {
-
+public class KafkaProducer {
+    private static final String REDIS_KEY_PREFIX = "product:";
     private final KafkaTemplate<String, ProductForSearch> kafkaTemplateUpdate;
 
     private final AvatarRepository avatarRepository;
-
+    private final RedisTemplate<String, Product> redisTemplate;
 
     private final KafkaTemplate<String, DeleteDTO> kafkaTemplateDelete;
     private final ProductRepository productRepository;
 
-    public kafkaProducer(KafkaTemplate<String, ProductForSearch> kafkaTemplate, AvatarRepository avatarRepository, KafkaTemplate<String, DeleteDTO> kafkaTemplateDelete, ProductRepository productRepository) {
+    public KafkaProducer(KafkaTemplate<String, ProductForSearch> kafkaTemplate, AvatarRepository avatarRepository, RedisTemplate<String, Product> redisTemplate, KafkaTemplate<String, DeleteDTO> kafkaTemplateDelete, ProductRepository productRepository) {
         this.kafkaTemplateUpdate = kafkaTemplate;
         this.avatarRepository = avatarRepository;
+        this.redisTemplate = redisTemplate;
         this.kafkaTemplateDelete = kafkaTemplateDelete;
         this.productRepository = productRepository;
     }
@@ -44,14 +47,9 @@ public class kafkaProducer {
         newProductForSearch.setQuantitySold(product.getQuantitySold() != null ? product.getQuantitySold() : 0);
         newProductForSearch.setRating(product.getRating() != null ? product.getRating() : null);
         newProductForSearch.setArticle(product.getArticle());
-
         Avatar avatar = avatarRepository.findByProductId(product.getId());
         newProductForSearch.setUrl(avatar.getUrl());
-
         newProductForSearch.setCountComments(productRepository.getCountCommentsByProductId(product.getId()));
-
-
-
         return newProductForSearch;
     }
 
@@ -67,6 +65,19 @@ public class kafkaProducer {
         DeleteDTO deleteDTO = new DeleteDTO();
         deleteDTO.setIds(ids);
         kafkaTemplateDelete.send("deleteElastic", deleteDTO);
+    }
+
+    public void updateCommCount(UUID id){
+        Optional<Product> productOptional = productRepository.findById(id);
+        if(productOptional.isEmpty()){
+            log.info("product not found id {}", id);
+            return;
+        }
+        Product product = productOptional.get();
+        product.setCountComments(productRepository.getCountCommentsByProductId(id));
+        productRepository.save(product);
+        sendUpdate(getProductForSearchFromProduct(product));
+        redisTemplate.delete(REDIS_KEY_PREFIX+product.getId());
     }
 
 }

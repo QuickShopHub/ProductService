@@ -18,13 +18,13 @@ public class PhotoService {
 
     private final ProductRepository productRepository;
 
-    private final kafkaProducer  kafkaProducer;
+    private final KafkaProducer kafkaProducer;
 
     private final PhotosRepository photosRepository;
 
     private final JwtAuthFilter jwtAuthFilter;
 
-    public PhotoService(AvatarRepository avatarRepository, ProductRepository productRepository, kafkaProducer kafkaProducer, PhotosRepository photosRepository, JwtAuthFilter jwtAuthFilter) {
+    public PhotoService(AvatarRepository avatarRepository, ProductRepository productRepository, KafkaProducer kafkaProducer, PhotosRepository photosRepository, JwtAuthFilter jwtAuthFilter) {
         this.avatarRepository = avatarRepository;
         this.productRepository = productRepository;
         this.kafkaProducer = kafkaProducer;

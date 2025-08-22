@@ -4,12 +4,9 @@ import com.myshop.productservice.dto.NewProduct;
 import com.myshop.productservice.dto.UpdateAvatar;
 import com.myshop.productservice.dto.UpdateRating;
 import com.myshop.productservice.filter.JwtAuthFilter;
-import com.myshop.productservice.repository.Avatar;
-import com.myshop.productservice.repository.AvatarRepository;
 import com.myshop.productservice.repository.Product;
 import com.myshop.productservice.repository.ProductRepository;
 import com.myshop.productservice.dto.ProductUpdatePrice;
-import com.myshop.productservice.dto.searchService.ProductForSearch;
 import jakarta.transaction.Transactional;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -35,7 +32,7 @@ public class ProductService {
 
     private static final String REDIS_KEY_PREFIX = "product:";
 
-    private final kafkaProducer  kafkaProducer;
+    private final KafkaProducer kafkaProducer;
 
     private final RedisTemplate<String, Product> redisTemplate;
 
@@ -47,7 +44,7 @@ public class ProductService {
 
 
     @Autowired
-    public ProductService(kafkaProducer kafkaProducer, RedisTemplate<String, Product> redisTemplate, ProductRepository productRepository, PhotoService photoService, JwtAuthFilter jwtAuthFilter) {
+    public ProductService(KafkaProducer kafkaProducer, RedisTemplate<String, Product> redisTemplate, ProductRepository productRepository, PhotoService photoService, JwtAuthFilter jwtAuthFilter) {
         this.kafkaProducer = kafkaProducer;
         this.redisTemplate = redisTemplate;
         this.productRepository = productRepository;
@@ -219,23 +216,19 @@ public class ProductService {
     }
 
 
-    public long deleteProducts(List<UUID> ids) {
-        long count = 0;
-        List<UUID> deletedIds = new ArrayList<>();
+    public List<Product> deleteProducts(List<UUID> ids) {
+
+        List<Product> deletedProduct = new ArrayList<>();
         for (UUID id : ids) {
             Optional<Product> temp = productRepository.findById(id);
             if(temp.isPresent() && jwtAuthFilter.tryDo(temp.get().getIdVendor())) {
-                count++;
                 redisTemplate.delete(REDIS_KEY_PREFIX+id);
-                deletedIds.add(id);
+                deletedProduct.add(temp.get());
             }
         }
-
-        productRepository.deleteAllById(deletedIds);
+        productRepository.deleteAll(deletedProduct);
         kafkaProducer.sendDelete(ids);
-
-
-        return count;
+        return deletedProduct;
     }
 
     public Product updateRatingValue(UpdateRating updateRating) {

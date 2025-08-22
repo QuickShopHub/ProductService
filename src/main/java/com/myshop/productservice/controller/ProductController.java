@@ -73,13 +73,11 @@ public class ProductController {
 
     @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
     @DeleteMapping()
-    public ResponseEntity<String>  deleteProducts(@Valid @RequestParam(name = "id") List<UUID> ids) {
-
+    public ResponseEntity<List<Product>>  deleteProducts(@Valid @RequestParam(name = "id") List<UUID> ids) {
         if (ids == null || ids.isEmpty()) {
-            return ResponseEntity.badRequest().body("Список ID пуст");
+            return ResponseEntity.badRequest().build();
         }
-
-        return ResponseEntity.ok("Удалено: " + productService.deleteProducts(ids) + " записей");
+        return ResponseEntity.ok( productService.deleteProducts(ids));
     }
 
     @PreAuthorize("hasRole('USER')")

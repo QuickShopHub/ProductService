@@ -22,6 +22,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 @Slf4j
@@ -46,6 +47,11 @@ public class ProductController {
     @GetMapping(path = "/id")
     public List<Product> getProductsById(@Valid @RequestParam(name = "id") List<UUID> id) {
         return productService.getProductsById(id);
+    }
+
+    @PostMapping(path = "/elements")
+    public ResponseEntity<List<Product>> getProductsFromJson(@RequestBody @Valid ProductsIdList productsId) {
+        return productService.getProductsFromJsonList(productsId);
     }
 
     @PreAuthorize("hasRole('USER')")
@@ -95,16 +101,16 @@ public class ProductController {
     }
 
 
-    @GetMapping(path = "/avatar_id")
-    public List<String> getAvatar(@RequestParam(name = "id") List<UUID> ids) {
-        log.info("Ids length" + ids.size());
-        return photoService.getAvatar(ids);
+    @PostMapping(path = "/avatar_ids")
+    public ResponseEntity<Map<String, List<String>>> getAvatar(@RequestBody Map<String, List<UUID>> data) {
+        return photoService.getAvatar(data.get("ids"));
     }
 
     @GetMapping(path = "/photo")
     public List<Photos>  getPhotos(@RequestParam(name = "id") UUID id) {
         return photoService.getPhotos(id);
     }
+
     @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
     @DeleteMapping(path = "/photo/{id}")
     public ResponseEntity<String> deletePhotos(@PathVariable UUID id) {

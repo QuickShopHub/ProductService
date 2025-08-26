@@ -5,6 +5,7 @@ import com.myshop.productservice.repository.Product;
 import com.myshop.productservice.repository.ProductRepository;
 import com.myshop.productservice.repository.UpdateRatingEntity;
 import com.myshop.productservice.repository.UpdateRatingRepository;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
@@ -14,15 +15,17 @@ import java.util.UUID;
 
 @Service
 public class RatingService {
-
+    private static final String REDIS_KEY_PREFIX = "product:";
     private final UpdateRatingRepository updateRatingRepository;
     private final ProductRepository productRepository;
     private final KafkaProducer kafkaProducer;
+    private final RedisTemplate<String, Product> redisTemplate;
 
-    public RatingService(UpdateRatingRepository updateRatingRepository, ProductRepository productRepository, KafkaProducer kafkaProducer) {
+    public RatingService(UpdateRatingRepository updateRatingRepository, ProductRepository productRepository, KafkaProducer kafkaProducer, RedisTemplate<String, Product> redisTemplate) {
         this.updateRatingRepository = updateRatingRepository;
         this.productRepository = productRepository;
         this.kafkaProducer = kafkaProducer;
+        this.redisTemplate = redisTemplate;
     }
 
     public ResponseEntity<UpdateRatingEntity> setRating(UpdateRatingEntity updateRatingEntity){
@@ -57,6 +60,7 @@ public class RatingService {
             product.setRating(BigDecimal.ZERO);
         }
         productRepository.save(product);
+        redisTemplate.delete(REDIS_KEY_PREFIX+product.getId());
 
         kafkaProducer.sendUpdate(kafkaProducer.getProductForSearchFromProduct(product));
     }

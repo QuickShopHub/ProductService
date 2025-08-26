@@ -1,12 +1,9 @@
 package com.myshop.productservice.service;
 
-import com.myshop.productservice.dto.NewProduct;
-import com.myshop.productservice.dto.UpdateAvatar;
-import com.myshop.productservice.dto.UpdateRating;
+import com.myshop.productservice.dto.*;
 import com.myshop.productservice.filter.JwtAuthFilter;
 import com.myshop.productservice.repository.Product;
 import com.myshop.productservice.repository.ProductRepository;
-import com.myshop.productservice.dto.ProductUpdatePrice;
 import jakarta.transaction.Transactional;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -241,6 +238,19 @@ public class ProductService {
     }
 
 
+    public ResponseEntity<List<Product>> getProductsFromJsonList(ProductsIdList productsId){
 
+        List<Product> productList = productRepository.findAllById(productsId.getIds());
 
+        List<Product> result =  new ArrayList<>();
+
+        for(UUID productId : productsId.getIds()){
+            for(Product product : productList){
+                if(productId.equals(product.getId())){
+                    result.add(product);
+                }
+            }
+        }
+        return ResponseEntity.ok(result);
+    }
 }

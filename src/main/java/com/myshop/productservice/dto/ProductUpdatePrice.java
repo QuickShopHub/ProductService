@@ -2,12 +2,10 @@ package com.myshop.productservice.dto;
 
 import jakarta.validation.constraints.*;
 import lombok.Data;
-import org.springframework.stereotype.Repository;
 import java.math.BigDecimal;
 import java.util.UUID;
 
 @Data
-@Repository
 public class ProductUpdatePrice {
 
     @NotNull(message = "Id должен быть указан")

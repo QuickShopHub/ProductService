@@ -5,13 +5,14 @@ import com.myshop.productservice.dto.UpdateAvatar;
 import com.myshop.productservice.filter.JwtAuthFilter;
 import com.myshop.productservice.repository.*;
 import jakarta.transaction.Transactional;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
 
-
+@Slf4j
 @Service
 public class PhotoService {
     private final AvatarRepository avatarRepository;
@@ -61,24 +62,24 @@ public class PhotoService {
     }
 
 
-    public List<String> getAvatar(List<UUID> ids){
-        if(ids.isEmpty()){
-            return List.of();
+    public ResponseEntity<Map<String, List<String>>> getAvatar(List<UUID> data){
+        if(data == null || data.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
         }
 
-        List<Avatar> temp = avatarRepository.getUrlsByProductIds(ids);
+        List<Avatar> avatarList =  avatarRepository.getUrlsByProductIds(data);
 
-        List<String> ans = new ArrayList<>();
+        List<String> result = new ArrayList<>();
 
-        for(UUID id : ids){
-            for(Avatar avatar : temp){
-                if(avatar.getProduct().getId().equals(id)){
-                    ans.add(avatar.getUrl());
+        for(UUID productId : data){
+            for(Avatar avatar : avatarList){
+                if(productId.equals(avatar.getProduct().getId())){
+                    result.add(avatar.getUrl());
                 }
             }
         }
 
-        return ans;
+        return ResponseEntity.ok(Map.of("urls", result));
     }
 
     public void photoForNewProduct(List<Photos>  photos, Product product){

@@ -22,4 +22,6 @@ public interface ProductRepository extends JpaRepository<Product, UUID> {
     @Query(value = "INSERT INTO products(count_comments) VALUES(:count)",   nativeQuery = true)
     void setCommentsCount(long count);
 
+    @Query(value = "SELECT COUNT(*) FROM buy_product WHERE product_id=:id",   nativeQuery = true)
+    Long countSoldBiProductId(UUID id);
 }

@@ -64,7 +64,7 @@ public class JwtAuthFilter extends OncePerRequestFilter {
             Authentication auth = new UsernamePasswordAuthenticationToken(id, null, authorities);
             SecurityContextHolder.getContext().setAuthentication(auth);
 
-            log.info("success authentication");
+
         } catch (ExpiredJwtException ex) {
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
             response.setContentType("application/json;charset=UTF-8");

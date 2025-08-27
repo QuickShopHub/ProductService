@@ -48,7 +48,9 @@ public class KafkaProducer {
         newProductForSearch.setRating(product.getRating() != null ? product.getRating() : null);
         newProductForSearch.setArticle(product.getArticle());
         Avatar avatar = avatarRepository.findByProductId(product.getId());
-        newProductForSearch.setUrl(avatar.getUrl());
+        if(avatar != null) {
+            newProductForSearch.setUrl(avatar.getUrl());
+        }
         newProductForSearch.setCountComments(productRepository.getCountCommentsByProductId(product.getId()));
         return newProductForSearch;
     }
@@ -78,6 +80,22 @@ public class KafkaProducer {
         productRepository.save(product);
         sendUpdate(getProductForSearchFromProduct(product));
         redisTemplate.delete(REDIS_KEY_PREFIX+product.getId());
+    }
+
+    public void updateSold(UUID id){
+        Optional<Product> productOptional = productRepository.findById(id);
+        if(productOptional.isEmpty()){
+            log.info("product not found id {}", id);
+            return;
+        }
+        Product product = productOptional.get();
+        Long countSold = productRepository.countSoldBiProductId(product.getId());
+        if(countSold != null) {
+            product.setQuantitySold(countSold);
+            productRepository.save(product);
+            redisTemplate.delete(REDIS_KEY_PREFIX+product.getId());
+            sendUpdate(getProductForSearchFromProduct(product));
+        }
     }
 
 }

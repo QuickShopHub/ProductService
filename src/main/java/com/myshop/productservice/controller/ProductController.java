@@ -56,7 +56,7 @@ public class ProductController {
 
     @PreAuthorize("hasRole('USER')")
     @PostMapping()
-    public Product addProduct(@RequestBody NewProduct newProduct) {
+    public ResponseEntity<Product> addProduct(@RequestBody NewProduct newProduct) {
         return productService.addProduct(newProduct);
     }
 

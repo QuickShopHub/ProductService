@@ -81,4 +81,32 @@ public class KafkaConfig {
         return factory;
     }
 
+    @Bean
+    public ConsumerFactory<String, CommentIdDTO> productConsumerFactorySold() {
+        Map<String, Object> props = baseConsumerConfigs();
+        props.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, ErrorHandlingDeserializer.class);
+        props.put(ErrorHandlingDeserializer.VALUE_DESERIALIZER_CLASS, JsonDeserializer.class);
+        props.put(JsonDeserializer.VALUE_DEFAULT_TYPE, "com.myshop.productservice.dto.ProductIdDTO");
+        return new DefaultKafkaConsumerFactory<>(props);
+    }
+
+    @Bean
+    public ConcurrentKafkaListenerContainerFactory<String, CommentIdDTO> kafkaListenerContainerFactoryUpdateSold() {
+        ConcurrentKafkaListenerContainerFactory<String, CommentIdDTO> factory =
+                new ConcurrentKafkaListenerContainerFactory<>();
+        factory.setConsumerFactory(productConsumerFactorySold());
+
+        // Более надёжная обработка ошибок
+        DefaultErrorHandler errorHandler = new DefaultErrorHandler(
+                (consumerRecord, e) -> {
+                    log.error("Error processing product update: {}", consumerRecord.value(), e);
+                },
+                new FixedBackOff(1000L, 2)
+        );
+        errorHandler.addNotRetryableExceptions(IllegalArgumentException.class);
+        factory.setCommonErrorHandler(errorHandler);
+
+        return factory;
+    }
+
 }

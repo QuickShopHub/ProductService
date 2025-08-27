@@ -40,8 +40,7 @@ public class Product{
     @Digits(integer = 10, fraction = 2, message = "Цена должна иметь максимум 2 знака после запятой")
     private BigDecimal price;
 
-    @NotBlank(message = "Артикул должен быть указан")
-    private String article;
+    private String article = null;
 
     @DecimalMin(value = "0.0", inclusive = true, message = "Количество не может быть отрицательным")
     @NotNull(message = "Количество должно быть указано")
@@ -65,6 +64,8 @@ public class Product{
     private Long quantitySold = 0L;
 
     @Column(name = "count_comments")
-    private long countComments;
+    private long countComments = 0;
 
+    @Transient
+    private String message;
 }

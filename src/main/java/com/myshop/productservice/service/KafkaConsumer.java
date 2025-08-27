@@ -1,6 +1,7 @@
 package com.myshop.productservice.service;
 
 import com.myshop.productservice.dto.CommentIdDTO;
+import com.myshop.productservice.dto.ProductIdDTO;
 import lombok.extern.slf4j.Slf4j;
 
 import org.springframework.kafka.annotation.KafkaListener;
@@ -28,6 +29,16 @@ public class KafkaConsumer {
         log.info("Received message from topic `updateCountComments`: {}", commentIdDTO.getId());
         UUID id = commentIdDTO.getId();
         kafkaProducer.updateCommCount(id);
+    }
+
+    @KafkaListener(topics = "updateCountSold", containerFactory = "kafkaListenerContainerFactoryUpdateSold")
+    public void updateSold(ProductIdDTO productIdDTO) {
+        if(productIdDTO == null){
+            log.warn("commentIdDTO = null");
+            return;
+        }
+
+        kafkaProducer.updateSold(productIdDTO.getId());
     }
 
 }

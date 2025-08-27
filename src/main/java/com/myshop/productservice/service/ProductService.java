@@ -14,6 +14,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
+import java.security.SecureRandom;
 
 
 import java.math.BigDecimal;
@@ -39,6 +40,7 @@ public class ProductService {
 
     private final JwtAuthFilter jwtAuthFilter;
 
+    private static final SecureRandom RANDOM = new SecureRandom();
 
     @Autowired
     public ProductService(KafkaProducer kafkaProducer, RedisTemplate<String, Product> redisTemplate, ProductRepository productRepository, PhotoService photoService, JwtAuthFilter jwtAuthFilter) {
@@ -90,34 +92,52 @@ public class ProductService {
         return onSend;
     }
 
+    public static String generateRandomDigits(int length) {
+        StringBuilder result = new StringBuilder(length);
+        for (int i = 0; i < length; i++) {
+            // Генерируем случайную цифру от 0 до 9
+            int digit = RANDOM.nextInt(10);
+            result.append(digit);
+        }
+        return result.toString();
+    }
+
     @Transactional
-    public Product addProduct(NewProduct newProduct) {
+    public ResponseEntity<Product> addProduct(NewProduct newProduct) {
 
         Product product = newProduct.getProduct();
+
+        if(product.getArticle() == null){
+            product.setArticle(generateRandomDigits(15));
+        }
 
         Optional<Product> temp = productRepository.findByArticle(product.getArticle());
 
         if(temp.isPresent()) {
-            throw new IllegalArgumentException("Product with the same article already exists. Id: " + product.getId());
+            product.setMessage("Article is occupied");
+            return ResponseEntity.badRequest().body(product);
         }
 
         product.setId(UUID.randomUUID());
         product.setCreatedAt(LocalDate.now());
 
         productRepository.save(product);
-
-        photoService.photoForNewProduct(newProduct.getPhotos(), product);
+        if(newProduct.getPhotos() != null || newProduct.getPhotos().isEmpty()) {
+            photoService.photoForNewProduct(newProduct.getPhotos(), product);
+        }
 
         UpdateAvatar updateAvatar = new  UpdateAvatar();
 
         updateAvatar.setAvatar(newProduct.getAvatar());
         updateAvatar.getAvatar().setProduct(product);
         updateAvatar.getAvatar().setId(UUID.randomUUID());
-        photoService.setAvatar(updateAvatar);
 
+        if(newProduct.getAvatar().getUrl() != null) {
+            photoService.setAvatar(updateAvatar);
+        }
         kafkaProducer.sendUpdate(kafkaProducer.getProductForSearchFromProduct(product));
 
-        return product;
+        return ResponseEntity.ok(product);
     }
 
     public Page<Product> getAllProducts(Pageable pageable) {

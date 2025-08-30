@@ -3,13 +3,10 @@ spring:
     username: ${DB_USERNAME}
     password: ${DB_PASSWORD}
     url: ${DB_URL}
-  redis:
-    connection:
-      standalone:
-        host: localhost
-        port: 6379
   data:
     redis:
+      host: ${REDIS_HOST}
+      port: ${REDIS_PORT}
       repositories:
         enabled: false
 
@@ -17,8 +14,8 @@ spring:
 
 
   kafka:
+    bootstrap-servers: ${KAFKA_SERVER}
     producer:
-      bootstrap-servers: localhost:9092
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
       properties:
@@ -27,11 +24,7 @@ spring:
 
 server:
   port: 8443
-  ssl:
-    enabled: true
-    key-store: classpath:keystore.p12
-    key-store-password: changeit
-    key-store-type: PKCS12
+
 
 
 

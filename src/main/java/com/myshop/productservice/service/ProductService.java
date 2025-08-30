@@ -106,7 +106,6 @@ public class ProductService {
     public ResponseEntity<Product> addProduct(NewProduct newProduct) {
 
         Product product = newProduct.getProduct();
-
         if(product.getArticle() == null){
             product.setArticle(generateRandomDigits(15));
         }
@@ -120,9 +119,9 @@ public class ProductService {
 
         product.setId(UUID.randomUUID());
         product.setCreatedAt(LocalDate.now());
-
         productRepository.save(product);
         if(newProduct.getPhotos() != null || newProduct.getPhotos().isEmpty()) {
+
             photoService.photoForNewProduct(newProduct.getPhotos(), product);
         }
 

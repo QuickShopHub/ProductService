@@ -56,13 +56,13 @@ public class KafkaProducer {
     }
 
     public void sendUpdate(ProductForSearch productForSearch) {
-        log.info("send to topic `updateElastic` productForSearch: {}", productForSearch);
+
         kafkaTemplateUpdate.send("updateElastic", productForSearch);
+
     }
 
 
     public void sendDelete(List<UUID> ids) {
-        log.info("send to topic `deleteElastic` {}  to delete", ids);
 
         DeleteDTO deleteDTO = new DeleteDTO();
         deleteDTO.setIds(ids);

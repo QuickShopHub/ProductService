@@ -88,6 +88,7 @@ public class PhotoService {
             photo.setId(UUID.randomUUID());
             photosRepository.save(photo);
         }
+
     }
 
     public List<Photos>  getPhotos(UUID id){

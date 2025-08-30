@@ -28,7 +28,7 @@ import java.util.UUID;
 @Slf4j
 @RestController
 @RequestMapping(path = "/api/products")
-@CrossOrigin(origins = {"http://26.94.50.207:4200", "http://localhost:4200", "http://localhost:80", "http://localhost"})
+@CrossOrigin(origins = {"http://26.94.50.207:4200", "http://localhost:4200", "http://localhost:80", "http://localhost", "http://185.161.64.35"})
 public class ProductController {
 
     private final ProductService productService;
